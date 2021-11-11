@@ -282,7 +282,7 @@ sub _submit_job {
         $num_cmds_launched++;
         $num_cmds_written++;
     }
-    print $fh "EOCMDSLIST\n"
+    print $fh "EOCMDSLIST\n";
     
     print $fh "\n" 
         . "rm -f $monitor_started\n"
