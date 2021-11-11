@@ -456,12 +456,9 @@ sub _wait_for_completions {
                 unlink($monitor_file); # house cleaning
                 
                 if ($all_OK) {
-                    # lets not retain the shell script and stderr and stdout.  Only retain them for failures.
-                    unlink($shell_script);
-                    unlink("$shell_script.stderr", "$shell_script.stdout");
                     delete $self->{job_id_to_shell_script}->{$job_id};
                     
-                    print "OK.  Trying to delete $shell_script and .stderr and .stdout.\n" if $SEE;
+                    print "OK. $shell_script is done.\n" if $SEE;
                     
                 }
                 else {
