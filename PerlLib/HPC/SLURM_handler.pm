@@ -84,7 +84,9 @@ sub job_running_or_pending_on_grid {
     
     # print STDERR "Polling grid to check status of job: $job_id\n";
     
-    my $response = `squeue --noheader -l -j $job_id`;
+    my $squeue = $self->{config}->get_value('GRID', 'squeue') or confess "ERROR, need squeue set in config";
+    
+    my $response = `$squeue --noheader -l -j $job_id`;
     #print STDERR "Response:\n$response\n";
 
     foreach my $line (split(/\n/, $response)) {
