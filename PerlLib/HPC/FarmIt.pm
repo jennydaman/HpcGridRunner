@@ -255,6 +255,8 @@ sub _submit_job {
 
     print $fh "\n# batch starting at index $num_cmds_launched\n";
     print $fh  "touch $monitor_started\n\n";
+
+    print $fh "parallel --jobs \$SLURM_CPUS_PER_TASK << EOCMDSLIST\n";
             
     my @cmd_indices_prepped;
     
@@ -271,13 +273,16 @@ sub _submit_job {
 			mkdir $retval_subdir or die "Error, cannot mkdir $retval_subdir";
 		}
 
-        print $fh "## Command index $next_cmd_index\n"
-            . "$cmd_string\n"
-            . 'echo $? >> ' . "$retval_subdir/entry_$next_cmd_index.ret\n\n";
+        print $fh "$cmd_string"
+            . "  ;  "
+            . 'echo $? >> ' . "$retval_subdir/entry_$next_cmd_index.ret "
+            . "  ;  "
+            . "  ## Command index $next_cmd_index\n";
         
         $num_cmds_launched++;
         $num_cmds_written++;
     }
+    print $fh "EOCMDSLIST\n"
     
     print $fh "\n" 
         . "rm -f $monitor_started\n"
