@@ -51,6 +51,7 @@ sub submit_job_to_grid {
     
 
     if ($ret) {
+        print STDERR "$job_id_text\n";
         print STDERR "FARMIT failed to accept job: $cmd\n (ret $ret)\n";
         return(-1);
     }
