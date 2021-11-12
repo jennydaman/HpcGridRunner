@@ -272,7 +272,7 @@ sub _submit_job {
 
 
     # text file containing commands to run using parallel, read by the script
-    open (my $fh, ">$cmds_list_file") or die $!;
+    open ($fh, ">$cmds_list_file") or die $!;
 
     my @cmd_indices_prepped;
     
