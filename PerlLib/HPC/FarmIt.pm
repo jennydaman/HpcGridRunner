@@ -240,9 +240,12 @@ sub _submit_job {
     my $monitor_dir = $self->{monitor_dir};
 
     my $orig_num_cmds_launched = $num_cmds_launched;
-    
-    
+
     my $shell_script = "$cmds_dir/J$$.S${num_cmds_launched}.sh";
+    my $cmds_list_file = Cwd::abs_path("$shell_script.cmds.txt");
+
+
+    # script to submit to scheduler
     open (my $fh, ">$shell_script") or die $!;
     print $fh "#!/bin/sh\n\n";
     
@@ -256,8 +259,21 @@ sub _submit_job {
     print $fh "\n# batch starting at index $num_cmds_launched\n";
     print $fh  "touch $monitor_started\n\n";
 
-    print $fh "parallel --jobs \$SLURM_CPUS_PER_TASK << EOCMDSLIST\n";
-            
+    print $fh "parallel --jobs \$SLURM_CPUS_PER_TASK :::: $cmds_list_file\n";
+
+    print $fh "\n"
+        . "rm -f $monitor_started\n"
+        . "touch $monitor_finished\n"
+        . "\n"
+        . "exit 0\n\n";
+
+    close $fh;
+    chmod (0775, $shell_script);
+
+
+    # text file containing commands to run using parallel, read by the script
+    open (my $fh, ">$cmds_list_file") or die $!;
+
     my @cmd_indices_prepped;
     
     while ($num_cmds_launched < $num_cmds && $num_cmds_written < $cmds_per_node) {
@@ -282,17 +298,9 @@ sub _submit_job {
         $num_cmds_launched++;
         $num_cmds_written++;
     }
-    print $fh "EOCMDSLIST\n";
-    
-    print $fh "\n" 
-        . "rm -f $monitor_started\n"
-        . "touch $monitor_finished\n"
-        . "\n" 
-        . "exit 0\n\n";
-    
-    
+
     close $fh;
-    chmod (0775, $shell_script);
+
     
     print "Submitting: $shell_script to farmit\n" if $SEE;
     
@@ -302,7 +310,8 @@ sub _submit_job {
         print STDERR "FARMIT failed to accept job.  Will try again shortly.\n";
         
         unlink $shell_script; # cleanup, try again later
-        
+        unlink $cmds_list_file;
+
         sleep(2*60); # sleep 2 minutes for now.  Give the system time to recuperate if a problem exists
         return ($orig_num_cmds_launched);
         
